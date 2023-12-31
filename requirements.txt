@@ -1,0 +1,50 @@
+Configure the Suricata server
+SSH into the Suricata server using the following command:
+chmod 400 /root/advanced-vpc/vpc-mirroring/suricata.pemCopy
+ssh -i /root/advanced-vpc/vpc-mirroring/suricata.pem ubuntu@<Suricata_IP>Copy
+Type yes if prompted to continue connecting.
+
+Open the suricata.rules in the suricata server using the following command:
+sudo nano /var/lib/suricata/rules/suricata.rulesCopy
+Add the crypto-mining ruleset to the suricata.rules file:
+alert udp $HOME_NET any -> any 53 (msg:"Observed DNS Query to public CryptoMining pool Domain (pool.minergate.com)"; content:"|01|"; offset:2; depth:1; content:"|00 01 00 00 00 00 00|"; distance:1; within:7; content:"|04|pool|09|minergate|03|com|00|"; nocase; distance:0; fast_pattern; classtype:trojan-activity; sid:20000000; rev:1;)Copy
+alert dns $HOME_NET any -> any any (msg:"Observed DNS Query to public CryptoMining pool Domain (pool.minergate.com)"; dns_query; content:"pool.minergate.com"; nocase; isdataat:!1,relative; classtype:trojan-activity; sid:30000000; rev:1;)Copy
+Note: You can add any other ruleset to the suricata.rules file.
+
+Save the file and exit. ctrl + x, y, enter
+
+Restart the suricata service using the following command:
+
+sudo systemctl restart suricataCopy
+Check the status of the suricata service using the following command:
+sudo systemctl status suricataCopy
+Check the logs of the suricata service using the following command:
+sudo tail -f /var/log/suricata/fast.logCopy
+Configure the Application server
+Open new terminal to login into the Application server.
+
+Let's modify the permissions of the application.pem file using the following command:
+
+chmod 400 /root/advanced-vpc/vpc-mirroring/application.pemCopy
+SSH into the Application server using the following command:
+ssh -i /root/advanced-vpc/vpc-mirroring/application.pem ubuntu@<Application_Public_IP>Copy
+Type yes if prompted to continue connecting.
+
+Let's run the crypto-mining payloads on the application server using the following command:
+curl -s http://pool.minergate.com/dkjdjkjdlsajdkljalsskajdksakjdksajkllalkdjsalkjdsalkjdlkasj  > /dev/null &Copy
+curl -s http://pool.minergate.com/dkjdjkjdlsajdkljalsskajdksakjdksajkllalkdjsalkjdsalkjdlkasj  > /dev/nullCopy
+Check the suricata logs on the suricata server, you will see alerts generated.
+Things to try out
+Try to add more rulesets to the suricata.rules file and check the suricata logs on the suricata server.
+Install AWS CloudWatch agent on the suricata server and send the suricata logs to CloudWatch.
+Create a CloudWatch alarm to send an email notification when the suricata logs are generated.
+Conclusion
+In this lab, we have learned how VPC traffic mirroring works. We have also learned how to deploy the suricata server in AWS account using terraform. We have also learned how to configure the suricata server to generate alerts for the crypto-mining payloads.
+
+To destroy the stack in AWS account using terraform.
+
+Destroy terraform
+
+terraform destroy -auto-approveCopy
+This will destroy all the resources created using terraform in this lab.
+
